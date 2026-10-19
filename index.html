@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syntax to Solutions | Python Study Jam - TinkerHub CEK</title>
+  <meta name="description" content="Official 3-Day Python Study Jam presentation and video trailer for TinkerHub CE Karunagappally: Day 1 Snake Bytes, Day 2 Logic Unlocked, Day 3 Function Junction (The Offline Session).">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Fira+Code:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-cyber">
+  <!-- Interactive Particle & Grid Canvas -->
+  <canvas id="bg-canvas"></canvas>
+  <div class="crt-overlay"></div>
+  <div class="ambient-glow glow-cyan"></div>
+  <div class="ambient-glow glow-purple"></div>
+  <div class="ambient-glow glow-yellow"></div>
+
+  <!-- Top Navigation & Presentation Toolbar -->
+  <header id="top-toolbar">
+    <div class="brand-group">
+      <div class="brand-logo-wrap">
+        <img src="assets/tinkerhub_cek_logo.png" alt="TinkerHub CEKNPY - CE Karunagappally" class="tinkerhub-logo" id="brand-badge-img">
+        <span class="pulse-dot"></span>
+      </div>
+      <div class="brand-divider"></div>
+      <div class="brand-info">
+        <div class="brand-title" id="display-chapter">SYNTAX TO SOLUTIONS</div>
+        <div class="brand-tagline">3-DAY STUDY JAM • PYTHON</div>
+      </div>
+    </div>
+
+    <!-- Quick Status Pill -->
+    <div class="status-pill">
+      <span class="live-indicator"></span>
+      <span id="header-status-text">PRESENTATION COVER MODE</span>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="toolbar-actions">
+      <button id="btn-audio-toggle" class="btn-tool" title="Toggle Soundtrack (OneRepublic) (M)">
+        <span class="icon" id="audio-icon">🔊</span>
+        <span class="btn-text">Song: <b id="audio-state-text">OneRepublic ♫</b></span>
+      </button>
+
+      <button id="btn-mode-toggle" class="btn-tool highlight" title="Toggle Cinematic Trailer (Space)">
+        <span class="icon">▶</span>
+        <span class="btn-text" id="mode-text">Play 3-Day Trailer (31s)</span>
+      </button>
+
+      <button id="btn-day3-trailer" class="btn-tool highlight-accent" title="Play Day 3 Offline Session Video">
+        <span class="icon">🏢</span>
+        <span class="btn-text">Play Day 3 Video (27s)</span>
+      </button>
+
+      <button id="btn-video-center" class="btn-tool" title="Watch Rendered MP4 Videos & Download">
+        <span class="icon">🎬</span>
+        <span class="btn-text">MP4 Videos & Download</span>
+      </button>
+
+      <button id="btn-fullscreen" class="btn-tool" title="Fullscreen Presentation (F)">
+        <span class="icon">⛶</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Video Trailer Timeline Bar (Visible in Trailer Mode) -->
+  <div id="trailer-progress-container" class="hidden">
+    <div class="progress-bar-track">
+      <div id="trailer-progress-fill" style="width: 0%;"></div>
+    </div>
+    <div class="timeline-labels">
+      <div class="timeline-left">
+        <span id="trailer-track-badge" class="track-tag">3-DAY JAM TRAILER</span>
+        <span id="trailer-time-display">00:00 / 00:31</span>
+        <span id="trailer-stage-title">SCENE 1: THE SYNTAX WALL</span>
+      </div>
+      <div class="timeline-right">
+        <button id="btn-switch-trailer-track" class="btn-pill-small" title="Switch between Full Trailer and Day 3 Video">Switch to Day 3 Video ➔</button>
+        <span class="skip-hint">Press <b>ESC</b> or <b>SPACE</b> to exit</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN STAGE WRAPPER -->
+  <main id="main-stage">
+
+    <!-- ============================================== -->
+    <!-- VIEW 1: COVER PAGE / PRESENTATION WINDOW (DEFAULT) -->
+    <!-- ============================================== -->
+    <section id="view-cover" class="stage-view active-view">
+      <div class="cover-hero-grid">
+        <!-- Left Content Column -->
+        <div class="cover-content">
+          <div class="hero-chip">
+            <span class="chip-spark">⚡</span>
+            <span id="cover-sub-banner">TINKERHUB CE KARUNAGAPPALLY PRESENTS</span>
+          </div>
+
+          <h1 class="glitch-title" data-text="SYNTAX TO SOLUTIONS">
+            SYNTAX TO <span class="gradient-text">SOLUTIONS</span>
+          </h1>
+
+          <!-- The signature typewriter code line from the Vercel site -->
+          <div class="code-signature-box">
+            <span class="code-fn">print</span><span class="code-punct">(</span><span class="code-str">"Syntax to Solutions"</span><span class="code-punct">)</span><span class="code-caret">&nbsp;</span>
+          </div>
+
+          <p class="hero-tagline" id="cover-main-tagline">
+            Three days to go from Python fundamentals to problem-solving and collaborative building. 
+            Learn by experimenting, break down problems, explore <strong>AI as a learning companion</strong>, 
+            and build something together. <strong>No prior experience required.</strong>
+          </p>
+
+          <!-- The 3 Days Roadway Cards -->
+          <div class="three-days-strip">
+            <div class="day-mini-card day1-card">
+              <div class="day-mini-badge">DAY 01 • OCT 16</div>
+              <h4>Snake Bytes</h4>
+              <p>Variables, strings, conditionals & loops. 8:00 PM Online.</p>
+              <div class="day-tags"><span>syntax</span><span>loops</span><span>I/O</span></div>
+            </div>
+
+            <div class="day-mini-card day2-card">
+              <div class="day-mini-badge">DAY 02 • OCT 17</div>
+              <h4>Logic Unlocked</h4>
+              <p>Functions, recursion, algorithms & AI companion. 8:00 PM Online.</p>
+              <div class="day-tags"><span>functions</span><span>algorithms</span><span>AI</span></div>
+            </div>
+
+            <div class="day-mini-card day3-card highlight-offline">
+              <div class="day-mini-badge offline-badge">DAY 03 • OCT 22 • OFFLINE</div>
+              <h4>Function Junction</h4>
+              <p>Team code swaps, unfamiliar code reading & live collaborative app build!</p>
+              <div class="day-tags"><span>offline lab</span><span>code swap</span><span>team build</span></div>
+            </div>
+          </div>
+
+          <!-- Event Meta Cards -->
+          <div class="event-meta-cards">
+            <div class="meta-card">
+              <span class="meta-label">DATES</span>
+              <div class="meta-val" id="disp-date">OCTOBER 16 • 17 • 22</div>
+              <span class="meta-sub">3 Days • 1 Unified Arc</span>
+            </div>
+            <div class="meta-card">
+              <span class="meta-label">ONLINE SESSIONS</span>
+              <div class="meta-val">OCT 16 & 17 @ 8:00 PM</div>
+              <span class="meta-sub">Google Meet • Decks 01 & 02</span>
+            </div>
+            <div class="meta-card">
+              <span class="meta-label">OFFLINE SESSION</span>
+              <div class="meta-val" id="disp-venue">OCT 22 • CEK CAMPUS</div>
+              <span class="meta-sub">Function Junction • In-Person</span>
+            </div>
+            <div class="meta-card">
+              <span class="meta-label">MENTOR</span>
+              <div class="meta-val">ARJUN S NAIR</div>
+              <span class="meta-sub">Learning Coordinator, CEK</span>
+            </div>
+          </div>
+
+          <!-- Primary CTA Buttons -->
+          <div class="cover-actions">
+            <button id="btn-hero-play-trailer" class="btn-primary pulse-glow">
+              <span class="btn-icon">▶</span>
+              <span>Watch 3-Day Trailer (31s)</span>
+            </button>
+
+            <button id="btn-hero-play-day3" class="btn-accent pulse-glow-accent">
+              <span class="btn-icon">🏢</span>
+              <span>Watch Day 3 Offline Video (27s)</span>
+            </button>
+
+            <button id="btn-hero-explore-curriculum" class="btn-secondary">
+              <span class="btn-icon">💡</span>
+              <span>3-Day Curriculum & Mentor Note</span>
+            </button>
+
+            <a id="btn-hero-vercel" href="https://tinkerhubceknpy-syntax-to-solution-python.vercel.app/" class="btn-outline-custom" target="_blank" rel="noopener">
+              <span>🌐 Open Live Deployed Site ➔</span>
+            </a>
+          </div>
+
+          <!-- Peer Note / Signature Quote -->
+          <div class="peer-note">
+            <span class="quote-mark">“</span>
+            <div class="quote-text-group">
+              <strong id="disp-quote">Python is easy. Until it isn't.</strong>
+              <span>Bring your laptop, a notebook, and one idea you want to build.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Visual Column (Interactive Visual Showcase & Code Terminal) -->
+        <div class="cover-visual">
+          <div class="visual-tabs">
+            <button class="vtab active" data-tab="poster">Official Poster</button>
+            <button class="vtab" data-tab="day3">Day 3 Offline Lab</button>
+            <button class="vtab" data-tab="terminal">Live Terminal</button>
+          </div>
+
+          <!-- Tab Content 1: Official Poster -->
+          <div class="tab-pane active" id="pane-poster">
+            <div class="hero-image-card poster-card">
+              <img src="assets/poster.png" alt="Syntax to Solutions - 3-Day Python Study Jam Official Poster" class="hero-poster-img" id="hero-poster-img">
+              <div class="poster-overlay-badge">
+                <span class="tag-live">LIVE</span>
+                <span>DECKS 01 & 02 LIVE • DAY 03 OFFLINE</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Content 2: Day 3 Offline Workshop Photo -->
+          <div class="tab-pane hidden" id="pane-day3">
+            <div class="hero-image-card day3-photo-card">
+              <img src="assets/day3_offline.jpg" alt="Day 3 Function Junction Offline Collaborative Jam" class="hero-cover-art" id="hero-day3-art">
+              <div class="holo-tag tag-top-right">
+                <span class="holo-icon">🏢</span>
+                <div class="holo-text">
+                  <span class="label">OCTOBER 22</span>
+                  <span class="val">OFFLINE IN-PERSON</span>
+                </div>
+              </div>
+              <div class="holo-tag tag-bottom-left">
+                <span class="holo-icon">⚡</span>
+                <div class="holo-text">
+                  <span class="label">FUNCTION JUNCTION</span>
+                  <span class="val">TEAM CODE SWAP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Content 3: Live Interactive Terminal -->
+          <div class="tab-pane hidden" id="pane-terminal">
+            <div class="mini-terminal">
+              <div class="term-header">
+                <span class="term-dot red"></span>
+                <span class="term-dot yellow"></span>
+                <span class="term-dot green"></span>
+                <span class="term-title">syntax_to_solutions.py — TinkerHub CEK</span>
+              </div>
+              <pre class="term-body"><code id="code-typewriter"># Press Play to watch the 31-second trailer...</code></pre>
+            </div>
+          </div>
+
+          <!-- Fast Video Launch Card Below Visual -->
+          <div class="fast-video-card">
+            <div class="fvc-left">
+              <strong>🎬 2 Rendered 1080p MP4 Videos Ready</strong>
+              <small>Full Study Jam Trailer (31s) + Day 3 Offline Special (27s)</small>
+            </div>
+            <button id="btn-quick-watch-mp4" class="btn-pill-action">Watch & Download MP4s</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ============================================== -->
+    <!-- VIEW 2: CINEMATIC TRAILER SCENES (VIDEO MODE)  -->
+    <!-- ============================================== -->
+    <section id="view-trailer" class="stage-view">
+      <div class="trailer-viewport">
+
+        <!-- ================= TRACK 1: 3-DAY FULL STUDY JAM TRAILER (31s) ================= -->
+        <div id="track-full" class="trailer-track active-track">
+          <!-- Scene 1: The Syntax Wall (0s - 5.2s) -->
+          <div class="trailer-scene" id="scene-1">
+            <div class="scene-inner">
+              <div class="error-badge shake-animation">
+                <span class="err-icon">⚠️</span>
+                <code>SyntaxError: invalid syntax (line 42) &bull; IndentationError</code>
+              </div>
+              <h2 class="scene-heading glitch-text" data-text="PYTHON IS EASY... UNTIL IT ISN'T.">
+                PYTHON IS EASY... <span class="text-danger">UNTIL IT ISN'T.</span>
+              </h2>
+              <div class="pain-points-grid">
+                <div class="pain-box">
+                  <span class="pain-emoji">😵‍💫</span>
+                  <h3>Tutorial Hell</h3>
+                  <p>Watching 40 hours of YouTube videos and freezing on a blank VS Code editor.</p>
+                </div>
+                <div class="pain-box">
+                  <span class="pain-emoji">🛑</span>
+                  <h3>Cryptic Stack Traces</h3>
+                  <p>One missing indentation tab or bracket crashes your whole homework assignment.</p>
+                </div>
+                <div class="pain-box">
+                  <span class="pain-emoji">😰</span>
+                  <h3>2 AM Lone Debugging</h3>
+                  <p>Suffering alone in silence without friends or mentors to explain the logic.</p>
+                </div>
+              </div>
+              <div class="scene-sub">Spoiler: You don't need more lectures. You need peer problem solving!</div>
+            </div>
+          </div>
+
+          <!-- Scene 2: 3 Days, One Arc (5.2s - 10.4s) -->
+          <div class="trailer-scene" id="scene-2">
+            <div class="scene-inner text-center">
+              <div class="disruption-badge">TINKERHUB CE KARUNAGAPPALLY PRESENTS</div>
+              <h2 class="hero-impact-text">
+                SYNTAX TO <span class="neon-glow-yellow">SOLUTIONS</span><br>
+                <span class="sub-lead">THREE DAYS, ONE ARC</span>
+              </h2>
+              <div class="roadmap-three-cards">
+                <div class="rc-item">
+                  <span class="rc-day">DAY 01</span>
+                  <h3>SNAKE BYTES</h3>
+                  <p>Oct 16 • 8 PM (Online)</p>
+                  <small>Variables, I/O, Strings & Loops</small>
+                </div>
+                <div class="rc-item">
+                  <span class="rc-day">DAY 02</span>
+                  <h3>LOGIC UNLOCKED</h3>
+                  <p>Oct 17 • 8 PM (Online)</p>
+                  <small>Functions, Scope, Algorithms & AI</small>
+                </div>
+                <div class="rc-item highlight">
+                  <span class="rc-day">DAY 03</span>
+                  <h3>FUNCTION JUNCTION</h3>
+                  <p>Oct 22 (Offline Lab)</p>
+                  <small>Team Code Swaps & Live App Build</small>
+                </div>
+              </div>
+              <div class="badge-free-callout">ZERO PRIOR EXPERIENCE REQUIRED • 100% FREE FOR ALL STUDENTS</div>
+            </div>
+          </div>
+
+          <!-- Scene 3: Online Tracks (10.4s - 15.6s) -->
+          <div class="trailer-scene" id="scene-3">
+            <div class="scene-inner">
+              <div class="scene-tag">OCT 16 & 17 • 8:00 PM • GOOGLE MEET</div>
+              <h2 class="scene-heading">BUILDING LOGIC THAT <span class="text-accent">ACTUALLY CLICKS</span></h2>
+              <div class="split-track-grid">
+                <div class="track-col">
+                  <div class="tc-header day1-col">DAY 01: SNAKE BYTES</div>
+                  <ul class="tc-list">
+                    <li>Python syntax & core data types demystified</li>
+                    <li>Dynamic variables, string manipulation & input/output</li>
+                    <li>Branching logic with conditionals (if/else)</li>
+                    <li>Clean iteration loops without headaches</li>
+                    <li>Hands-on micro-scripts coded together live</li>
+                  </ul>
+                </div>
+                <div class="track-col">
+                  <div class="tc-header day2-col">DAY 02: LOGIC UNLOCKED</div>
+                  <ul class="tc-list">
+                    <li>Control flow mastery & range() mechanics</li>
+                    <li>Writing reusable functions, arguments & return values</li>
+                    <li>Algorithmic breakdown: scope & recursion</li>
+                    <li>Breaking real-world problems into tiny modular steps</li>
+                    <li>Using AI as a learning companion — NOT a shortcut!</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 4: Day 3 Offline Climax (15.6s - 20.8s) -->
+          <div class="trailer-scene" id="scene-4">
+            <div class="scene-inner text-center">
+              <div class="ready-badge">THE OFFLINE CLIMAX • OCTOBER 22</div>
+              <h2 class="hero-impact-text">
+                FUNCTION <span class="text-danger">JUNCTION</span><br>
+                <span class="sub-lead">IN-PERSON COLLABORATIVE BUILD @ CEK CAMPUS</span>
+              </h2>
+              <div class="code-swap-flow">
+                <div class="cs-step">
+                  <div class="cs-num">01</div>
+                  <h4>Build Micro-Functions</h4>
+                  <p>Each team writes 1 clean Python function</p>
+                </div>
+                <div class="cs-arrow">➔</div>
+                <div class="cs-step">
+                  <div class="cs-num">02</div>
+                  <h4>The Code Swap</h4>
+                  <p>Pass your code to another table with 0 hints!</p>
+                </div>
+                <div class="cs-arrow">➔</div>
+                <div class="cs-step">
+                  <div class="cs-num">03</div>
+                  <h4>Read & Decipher</h4>
+                  <p>Understand unfamiliar code & test edge cases</p>
+                </div>
+                <div class="cs-arrow">➔</div>
+                <div class="cs-step">
+                  <div class="cs-num">04</div>
+                  <h4>Assemble Master App</h4>
+                  <p>Plug all functions together into a working project</p>
+                </div>
+              </div>
+              <div class="scene-sub">“Collaboration turns individual ideas into something bigger.”</div>
+            </div>
+          </div>
+
+          <!-- Scene 5: Mentor & What To Bring (20.8s - 26.0s) -->
+          <div class="trailer-scene" id="scene-5">
+            <div class="scene-inner">
+              <div class="mentor-layout-grid">
+                <div class="mentor-card">
+                  <div class="mentor-badge">STUDY JAM MENTOR</div>
+                  <h3>ARJUN S NAIR</h3>
+                  <div class="mentor-role">Learning Coordinator • CE Karunagappally</div>
+                  <p class="mentor-quote">
+                    “Python is easy. Until it isn't. When you hit bugs or logical roadblocks, 
+                    you don't need another generic tutorial video. You need peers and mentors 
+                    by your side to demystify errors and build confidence together.”
+                  </p>
+                </div>
+                <div class="toolkit-card">
+                  <div class="toolkit-badge">YOUR TOOLKIT FOR DAY 3</div>
+                  <ul class="toolkit-list">
+                    <li><strong>💻 Charged Laptop:</strong> With Python 3 installed</li>
+                    <li><strong>📓 Notebook & Pen:</strong> For whiteboarding logic pipelines</li>
+                    <li><strong>💡 One Idea To Build:</strong> Bring your favorite problem or curiosity</li>
+                    <li><strong>🤝 Zero Ego & Curiosity:</strong> We debug, laugh, and ship together</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene 6: Finale / Claim Your Seat (26.0s - 31.5s) -->
+          <div class="trailer-scene" id="scene-6">
+            <div class="scene-inner text-center">
+              <div class="finale-emblem-wrap">
+                <img src="assets/poster.png" alt="Syntax to Solutions Poster" class="finale-art-poster pulse-glow">
+              </div>
+              <h1 class="finale-title">
+                SYNTAX TO <span class="gradient-text">SOLUTIONS</span>
+              </h1>
+              <p class="finale-date" id="finale-date-text">
+                TINKERHUB CE KARUNAGAPPALLY • OCT 16, 17 (ONLINE 8 PM) & OCT 22 (OFFLINE)
+              </p>
+              <div class="finale-buttons">
+                <button id="btn-replay-trailer" class="btn-primary">
+                  <span>↺ Replay 3-Day Trailer</span>
+                </button>
+                <button id="btn-switch-to-day3-now" class="btn-accent">
+                  <span>🏢 Play Day 3 Offline Video (27s)</span>
+                </button>
+                <button id="btn-trailer-to-cover" class="btn-secondary">
+                  <span>❖ Back to Presentation Cover</span>
+                </button>
+              </div>
+              <div class="finale-footer-text">
+                Visit: <a href="https://tinkerhubceknpy-syntax-to-solution-python.vercel.app/" target="_blank" class="link-yellow">tinkerhubceknpy-syntax-to-solution-python.vercel.app</a>
+                • Share Projects: <a href="https://forms.gle/W92BEYkN2sBf7R88A" target="_blank" class="link-yellow">forms.gle/W92BEYkN2sBf7R88A</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= TRACK 2: DAY 3 OFFLINE SPECIAL VIDEO (27s) ================= -->
+        <div id="track-day3" class="trailer-track hidden">
+          <!-- Day 3 Scene 1: Announcement (0s - 5.2s) -->
+          <div class="trailer-scene" id="scene-d3-1">
+            <div class="scene-inner text-center">
+              <div class="disruption-badge">DAY 03 OF 03 • THE GRAND OFFLINE FINALE</div>
+              <h2 class="hero-impact-text">
+                FUNCTION <span class="neon-glow-yellow">JUNCTION</span><br>
+                <span class="sub-lead">BUILD & COLLABORATE • IN-PERSON MAKER SESSION</span>
+              </h2>
+              <div class="d3-meta-strip">
+                <div class="d3m-box">
+                  <span>📅 DATE</span>
+                  <strong>OCTOBER 22</strong>
+                </div>
+                <div class="d3m-box">
+                  <span>📍 VENUE</span>
+                  <strong>CEK CAMPUS LAB</strong>
+                </div>
+                <div class="d3m-box">
+                  <span>🤝 FORMAT</span>
+                  <strong>IN-PERSON ONLY</strong>
+                </div>
+                <div class="d3m-box">
+                  <span>🎟️ ENTRY</span>
+                  <strong>100% FREE</strong>
+                </div>
+              </div>
+              <div class="scene-sub">No Google Meet link today! Real peers, hands-on debugging, and shared energy.</div>
+            </div>
+          </div>
+
+          <!-- Day 3 Scene 2: The In-Person Maker Space (5.2s - 10.4s) -->
+          <div class="trailer-scene" id="scene-d3-2">
+            <div class="scene-inner">
+              <div class="d3-split-layout">
+                <div class="d3-photo-box">
+                  <img src="assets/day3_offline.jpg" alt="Day 3 Collaborative Lab" class="d3-feature-img">
+                  <div class="d3-img-badge">🔴 LIVE AT CE KARUNAGAPPALLY</div>
+                </div>
+                <div class="d3-info-box">
+                  <div class="scene-tag">// THE IN-PERSON VIBE</div>
+                  <h3 class="d3-head">NO MORE CODING IN ISOLATION.</h3>
+                  <p class="d3-para">
+                    After 2 nights of virtual fundamentals, we gather physically at College of Engineering Karunagappally.
+                  </p>
+                  <ul class="d3-bullets">
+                    <li>• Sit side-by-side with peer programmers</li>
+                    <li>• Instant unblocking — mentors and seniors right beside you</li>
+                    <li>• Whiteboarding logic before writing syntax</li>
+                    <li>• Share laughs over syntax errors and celebrate working code!</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Day 3 Scene 3: The Code Swap Challenge (10.4s - 15.6s) -->
+          <div class="trailer-scene" id="scene-d3-3">
+            <div class="scene-inner text-center">
+              <div class="scene-tag">DAY 3 EXCLUSIVE ACTIVITY</div>
+              <h2 class="scene-heading">THE <span class="text-danger">CODE SWAP</span> CHALLENGE</h2>
+              <div class="code-swap-flow">
+                <div class="cs-step">
+                  <div class="cs-num">01</div>
+                  <h4>Write Function</h4>
+                  <p>Build 1 focused Python function with docstrings</p>
+                </div>
+                <div class="cs-arrow">➔</div>
+                <div class="cs-step">
+                  <div class="cs-num">02</div>
+                  <h4>Swap Pass</h4>
+                  <p>Exchange laptops with the next team without speaking!</p>
+                </div>
+                <div class="cs-arrow">➔</div>
+                <div class="cs-step">
+                  <div class="cs-num">03</div>
+                  <h4>Read & Test</h4>
+                  <p>Decipher their logic, run test cases & fix bugs</p>
+                </div>
+                <div class="cs-arrow">➔</div>
+                <div class="cs-step">
+                  <div class="cs-num">04</div>
+                  <h4>Assemble App</h4>
+                  <p>Chain all functions into a working project</p>
+                </div>
+              </div>
+              <div class="badge-free-callout">
+                INDUSTRY REALITY: Reading other developers' code is 80% of software engineering!
+              </div>
+            </div>
+          </div>
+
+          <!-- Day 3 Scene 4: Mentor Guidance & Collaboration (15.6s - 20.8s) -->
+          <div class="trailer-scene" id="scene-d3-4">
+            <div class="scene-inner">
+              <div class="mentor-layout-grid">
+                <div class="mentor-card">
+                  <div class="mentor-badge">LEARNING COORDINATOR</div>
+                  <h3>ARJUN S NAIR</h3>
+                  <div class="mentor-role">TinkerHub CE Karunagappally</div>
+                  <p class="mentor-quote">
+                    “Bring your laptop, a notebook, and one idea you want to build. 
+                    In this offline session, you won't just learn Python syntax — you will learn 
+                    how software is built in real engineering teams.”
+                  </p>
+                </div>
+                <div class="toolkit-card">
+                  <div class="toolkit-badge">OCTOBER 22 CHECKLIST</div>
+                  <ul class="toolkit-list">
+                    <li><strong>✔ Fully charged laptop:</strong> With Python 3 installed</li>
+                    <li><strong>✔ Notebook and pen:</strong> For logic diagrams & wireframes</li>
+                    <li><strong>✔ One problem/curiosity:</strong> An idea you want to solve</li>
+                    <li><strong>✔ Completed Days 1 & 2:</strong> Ready to assemble!</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Day 3 Scene 5: Day 3 Finale & Action (20.8s - 26.5s) -->
+          <div class="trailer-scene" id="scene-d3-5">
+            <div class="scene-inner text-center">
+              <div class="finale-emblem-wrap">
+                <img src="assets/day3_offline.jpg" alt="Day 3 Offline Jam" class="finale-art-round pulse-glow">
+              </div>
+              <h1 class="finale-title">
+                SEE YOU AT <span class="gradient-text">FUNCTION JUNCTION</span>
+              </h1>
+              <p class="finale-date">
+                OCTOBER 22 • CE KARUNAGAPPALLY CAMPUS • BRING YOUR LAPTOP & 1 IDEA
+              </p>
+              <div class="finale-buttons">
+                <button id="btn-replay-day3" class="btn-accent">
+                  <span>↺ Replay Day 3 Video</span>
+                </button>
+                <button id="btn-switch-to-full-trailer" class="btn-primary">
+                  <span>▶ Play Full 3-Day Trailer (31s)</span>
+                </button>
+                <button id="btn-day3-to-cover" class="btn-secondary">
+                  <span>❖ Back to Cover</span>
+                </button>
+              </div>
+              <div class="finale-footer-text">
+                TinkerHub CE Karunagappally • Free Peer-to-Peer Learning Initiative
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- VIEW 3: MP4 VIDEO PLAYER & DOWNLOAD CENTER     -->
+    <!-- ============================================== -->
+    <div id="video-center-modal" class="modal-backdrop hidden">
+      <div class="modal-card video-center-card">
+        <div class="modal-header">
+          <div>
+            <h2>🎬 Rendered 1080p MP4 Video Center</h2>
+            <p class="modal-sub">Watch the compiled videos or download the MP4 files directly to your machine</p>
+          </div>
+          <button id="btn-close-video-center" class="modal-close">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="video-switcher-tabs">
+            <button class="vsw-tab active" id="tab-vsw-day3">Day 3 Offline Video (27s MP4)</button>
+            <button class="vsw-tab" id="tab-vsw-full">3-Day Jam Trailer (31s MP4)</button>
+          </div>
+
+          <!-- Player Container -->
+          <div class="player-wrapper">
+            <video id="native-mp4-player" controls preload="metadata" class="active-video-player" poster="assets/day3_offline.jpg">
+              <source src="day3_offline_session.mp4" type="video/mp4" id="mp4-video-src">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+
+          <!-- Video Details & Direct Downloads -->
+          <div class="video-meta-box">
+            <div class="vmb-info">
+              <h4 id="vmb-title">Day 3: Function Junction — The Offline Session (1080p MP4)</h4>
+              <p id="vmb-desc">Dedicated video for the October 22 in-person collaborative maker lab at CE Karunagappally campus. Features the team code swap mechanics, mentor guidance, and checklist.</p>
+            </div>
+            <div class="vmb-actions">
+              <a id="btn-download-active-mp4" href="day3_offline_session.mp4" download="day3_offline_session.mp4" class="btn-primary">
+                <span>⬇ Download Day 3 MP4 (3.3 MB)</span>
+              </a>
+              <a href="tinkerhub_python_studyjam.mp4" download="tinkerhub_python_studyjam.mp4" class="btn-secondary">
+                <span>⬇ Download 3-Day Trailer MP4 (3.3 MB)</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-close-video-center-footer" class="btn-secondary">Close Video Center</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- VIEW 4: CURRICULUM & VALUE MODAL               -->
+    <!-- ============================================== -->
+    <div id="curriculum-modal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <h2>🚀 Syntax to Solutions: 3 Days, One Arc</h2>
+            <p class="modal-sub">How TinkerHub CE Karunagappally takes you from syntax confusion to building together</p>
+          </div>
+          <button id="btn-close-modal" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="timeline-roadmap">
+            <div class="day-step">
+              <div class="day-number day-pill-1">DAY 01</div>
+              <div class="day-content">
+                <div class="dc-meta">ONLINE • OCT 16, 8:00 PM • GOOGLE MEET</div>
+                <h4>Snake Bytes — The Fundamentals</h4>
+                <p>Get your first taste of Python! Explore syntax, variables, data types, input/output, conditionals, and loops through hands-on coding activities. Start small, experiment freely, and write your first programs.</p>
+                <div class="chips"><span>syntax</span><span>variables</span><span>data types</span><span>strings</span><span>I/O</span><span>if / else</span><span>loops</span></div>
+              </div>
+            </div>
+
+            <div class="day-step">
+              <div class="day-number day-pill-2">DAY 02</div>
+              <div class="day-content">
+                <div class="dc-meta">ONLINE • OCT 17, 8:00 PM • GOOGLE MEET</div>
+                <h4>Logic Unlocked — The Problem-Solving Arc</h4>
+                <p>Go beyond syntax and learn to think like a programmer. Break problems into smaller steps, build algorithms, debug code, and tackle challenges using loops, functions, and logical reasoning. Use AI as a learning companion, not a shortcut.</p>
+                <div class="chips"><span>control flow</span><span>range()</span><span>functions</span><span>scope</span><span>recursion</span><span>algorithms</span></div>
+              </div>
+            </div>
+
+            <div class="day-step highlight-day-step">
+              <div class="day-number day-pill-3">DAY 03</div>
+              <div class="day-content">
+                <div class="dc-meta">OFFLINE • OCT 22 • CE KARUNAGAPPALLY CAMPUS</div>
+                <h4>Function Junction — Build &amp; Collaborate</h4>
+                <p>Put your skills to work offline! Create small functions, exchange code with other teams, figure out how unfamiliar code works, and combine your pieces into a working project. Learn how collaboration turns individual ideas into something bigger.</p>
+                <div class="chips"><span>functions</span><span>code swap</span><span>reading code</span><span>team build</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mentor-spotlight-box">
+            <strong>Mentor: Arjun S Nair</strong> — Learning Coordinator, CE Karunagappally<br>
+            <span>“Bring your laptop, a notebook, and one idea you want to build.”</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-modal-close-action" class="btn-secondary">Close Roadmap</button>
+          <button id="btn-modal-start-trailer" class="btn-primary">Watch 3-Day Trailer ▶</button>
+          <button id="btn-modal-start-day3" class="btn-accent">Watch Day 3 Video 🏢</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Recording Status Toast -->
+    <div id="record-toast" class="toast hidden">
+      <div class="toast-spinner"></div>
+      <div class="toast-content">
+        <strong id="toast-title">Recording Video...</strong>
+        <span id="toast-desc">Running through trailer sequence to export high-definition video...</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Audio Context & App Scripts -->
+  <script src="audio.js"></script>
+  <script src="particles.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
