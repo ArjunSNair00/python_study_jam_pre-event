@@ -1,183 +1,298 @@
 /**
- * TinkerHub Python Study Jam - Interactive Cyber Matrix Particle Canvas
- * Renders floating Python syntax tokens, connected constellations, and energy pulses.
+ * TinkerHub CE Karunagappally — decorative particle constellation.
+ *
+ * Performance / accessibility behaviour:
+ *  - Respects prefers-reduced-motion (draws one static frame, no loop).
+ *  - Stops the animation loop when the tab is hidden or the canvas is offscreen.
+ *  - Caps the frame rate, scales for devicePixelRatio and debounces resizes.
  */
 
-class ParticleCanvas {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    if (!this.canvas) return;
-    this.ctx = this.canvas.getContext('2d');
-    this.particles = [];
-    this.tokenParticles = [];
-    this.pulses = [];
-    this.mouse = { x: -1000, y: -1000, radius: 140 };
+(function () {
+  'use strict';
 
-    this.tokens = [
-      'def', 'class', 'import', 'lambda', 'async', 'await', 
-      'for i in range():', 'return True', 'while stuck:', 'try:',
-      'except:', 'print("🚀")', 'yield', '[x**2]', '{ "peer": 1 }',
-      'f"Hello {name}"', 'self', 'None', 'with open():'
-    ];
+  const TOKENS = [
+    'def', 'class', 'import', 'lambda', 'async', 'await',
+    'for i in range():', 'return True', 'while stuck:', 'try:',
+    'except:', 'print("🚀")', 'yield', '[x**2]', '{ "peer": 1 }',
+    'f"Hello {name}"', 'self', 'None', 'with open():'
+  ];
 
-    this.resize();
-    this.initParticles();
-    this.bindEvents();
-    this.animate();
-  }
+  const TARGET_FPS = 30;
+  const FRAME_MS = 1000 / TARGET_FPS;
 
-  resize() {
-    this.width = this.canvas.width = window.innerWidth;
-    this.height = this.canvas.height = window.innerHeight;
-  }
+  class ParticleCanvas {
+    constructor(canvasId) {
+      this.canvas = document.getElementById(canvasId);
+      if (!this.canvas || !this.canvas.getContext) return;
 
-  initParticles() {
-    this.particles = [];
-    this.tokenParticles = [];
+      this.ctx = this.canvas.getContext('2d', { alpha: true });
+      if (!this.ctx) return;
 
-    const count = Math.min(Math.floor((this.width * this.height) / 16000), 70);
+      this.particles = [];
+      this.tokenParticles = [];
+      this.pulses = [];
+      this.mouse = { x: -1000, y: -1000, radius: 130 };
 
-    for (let i = 0; i < count; i++) {
-      this.particles.push({
-        x: Math.random() * this.width,
-        y: Math.random() * this.height,
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8,
-        radius: Math.random() * 2 + 1,
-        color: Math.random() > 0.4 ? 'rgba(0, 242, 254, ' : 'rgba(168, 85, 247, '
-      });
-    }
+      this.dpr = 1;
+      this.width = 0;
+      this.height = 0;
+      this.rafId = 0;
+      this.lastFrame = 0;
+      this.running = false;
+      this.visible = !document.hidden;
 
-    const tokenCount = Math.min(Math.floor(this.width / 120), 18);
-    for (let i = 0; i < tokenCount; i++) {
-      this.tokenParticles.push({
-        x: Math.random() * this.width,
-        y: Math.random() * this.height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        text: this.tokens[Math.floor(Math.random() * this.tokens.length)],
-        alpha: Math.random() * 0.4 + 0.15,
-        fontSize: Math.floor(Math.random() * 5 + 11)
-      });
-    }
-  }
+      this.motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      this.reducedMotion = this.motionQuery.matches;
 
-  bindEvents() {
-    window.addEventListener('resize', () => {
       this.resize();
       this.initParticles();
-    });
+      this.bindEvents();
 
-    window.addEventListener('mousemove', (e) => {
-      this.mouse.x = e.clientX;
-      this.mouse.y = e.clientY;
-    });
-
-    window.addEventListener('mouseleave', () => {
-      this.mouse.x = -1000;
-      this.mouse.y = -1000;
-    });
-  }
-
-  triggerShockwave(x = this.width / 2, y = this.height / 2) {
-    this.pulses.push({
-      x,
-      y,
-      radius: 10,
-      maxRadius: Math.max(this.width, this.height) * 0.8,
-      speed: 18,
-      alpha: 0.8
-    });
-  }
-
-  animate() {
-    this.ctx.clearRect(0, 0, this.width, this.height);
-
-    // 1. Draw Pulses / Shockwaves
-    for (let i = this.pulses.length - 1; i >= 0; i--) {
-      const p = this.pulses[i];
-      p.radius += p.speed;
-      p.alpha *= 0.94;
-
-      this.ctx.beginPath();
-      this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      this.ctx.strokeStyle = `rgba(0, 242, 254, ${p.alpha})`;
-      this.ctx.lineWidth = 3;
-      this.ctx.stroke();
-
-      if (p.alpha < 0.01 || p.radius >= p.maxRadius) {
-        this.pulses.splice(i, 1);
+      if (this.reducedMotion) {
+        this.drawStatic();
+      } else {
+        this.start();
       }
     }
 
-    // 2. Draw Connected Constellations
-    for (let i = 0; i < this.particles.length; i++) {
-      const p = this.particles[i];
+    resize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-      p.x += p.vx;
-      p.y += p.vy;
+      this.width = width;
+      this.height = height;
+      this.dpr = dpr;
 
-      if (p.x < 0) p.x = this.width;
-      if (p.x > this.width) p.x = 0;
-      if (p.y < 0) p.y = this.height;
-      if (p.y > this.height) p.y = 0;
+      this.canvas.width = Math.round(width * dpr);
+      this.canvas.height = Math.round(height * dpr);
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
 
-      // Mouse interaction
-      const dx = this.mouse.x - p.x;
-      const dy = this.mouse.y - p.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < this.mouse.radius) {
-        const force = (this.mouse.radius - dist) / this.mouse.radius;
-        p.x -= (dx / dist) * force * 3;
-        p.y -= (dy / dist) * force * 3;
+    initParticles() {
+      this.particles = [];
+      this.tokenParticles = [];
+
+      const isSmall = this.width < 700;
+      const count = Math.min(
+        Math.floor((this.width * this.height) / (isSmall ? 26000 : 18000)),
+        isSmall ? 28 : 64
+      );
+
+      for (let i = 0; i < count; i += 1) {
+        this.particles.push({
+          x: Math.random() * this.width,
+          y: Math.random() * this.height,
+          vx: (Math.random() - 0.5) * 0.55,
+          vy: (Math.random() - 0.5) * 0.55,
+          radius: Math.random() * 1.6 + 0.7,
+          color: Math.random() > 0.42 ? '34, 227, 242' : '168, 85, 247'
+        });
       }
 
-      // Draw point
-      this.ctx.beginPath();
-      this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      this.ctx.fillStyle = p.color + '0.7)';
-      this.ctx.fill();
+      const tokenCount = this.width < 700 ? 6 : Math.min(Math.floor(this.width / 130), 14);
+      for (let i = 0; i < tokenCount; i += 1) {
+        this.tokenParticles.push({
+          x: Math.random() * this.width,
+          y: Math.random() * this.height,
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: (Math.random() - 0.5) * 0.25,
+          text: TOKENS[Math.floor(Math.random() * TOKENS.length)],
+          alpha: Math.random() * 0.12 + 0.05,
+          fontSize: Math.floor(Math.random() * 4) + 11
+        });
+      }
+    }
 
-      // Connect near neighbors
-      for (let j = i + 1; j < this.particles.length; j++) {
-        const p2 = this.particles[j];
-        const cdx = p.x - p2.x;
-        const cdy = p.y - p2.y;
-        const cdist = Math.sqrt(cdx * cdx + cdy * cdy);
+    bindEvents() {
+      let resizeFrame = 0;
+      window.addEventListener('resize', () => {
+        if (resizeFrame) cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => {
+          resizeFrame = 0;
+          this.resize();
+          this.initParticles();
+          if (this.reducedMotion) this.drawStatic();
+        });
+      });
 
-        if (cdist < 110) {
-          const alpha = (1 - cdist / 110) * 0.22;
-          this.ctx.beginPath();
-          this.ctx.moveTo(p.x, p.y);
-          this.ctx.lineTo(p2.x, p2.y);
-          this.ctx.strokeStyle = `rgba(0, 242, 254, ${alpha})`;
-          this.ctx.lineWidth = 1;
-          this.ctx.stroke();
+      if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        window.addEventListener('pointermove', (event) => {
+          this.mouse.x = event.clientX;
+          this.mouse.y = event.clientY;
+        }, { passive: true });
+
+        window.addEventListener('pointerleave', () => {
+          this.mouse.x = -1000;
+          this.mouse.y = -1000;
+        }, { passive: true });
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        this.visible = !document.hidden;
+        if (this.reducedMotion) return;
+        if (this.visible) this.start();
+        else this.stop();
+      });
+
+      const onMotionChange = (event) => {
+        this.reducedMotion = event.matches;
+        if (this.reducedMotion) {
+          this.stop();
+          this.drawStatic();
+        } else {
+          this.start();
+        }
+      };
+      if (typeof this.motionQuery.addEventListener === 'function') {
+        this.motionQuery.addEventListener('change', onMotionChange);
+      }
+    }
+
+    start() {
+      if (this.running || this.reducedMotion) return;
+      this.running = true;
+      this.lastFrame = 0;
+      this.rafId = requestAnimationFrame((time) => this.animate(time));
+    }
+
+    stop() {
+      this.running = false;
+      if (this.rafId) cancelAnimationFrame(this.rafId);
+      this.rafId = 0;
+    }
+
+    triggerShockwave(x, y) {
+      if (this.reducedMotion || !this.ctx) return;
+      this.pulses.push({
+        x: typeof x === 'number' ? x : this.width / 2,
+        y: typeof y === 'number' ? y : this.height / 2,
+        radius: 8,
+        maxRadius: Math.max(this.width, this.height) * 0.7,
+        speed: 16,
+        alpha: 0.55
+      });
+    }
+
+    drawStatic() {
+      if (!this.ctx) return;
+      this.ctx.clearRect(0, 0, this.width, this.height);
+      this.ctx.fillStyle = 'rgba(34, 227, 242, 0.35)';
+      for (const particle of this.particles) {
+        this.ctx.beginPath();
+        this.ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.font = '12px "Fira Code", monospace';
+      this.ctx.fillStyle = 'rgba(34, 227, 242, 0.08)';
+      for (const token of this.tokenParticles) {
+        this.ctx.fillText(token.text, token.x, token.y);
+      }
+    }
+
+    animate(time) {
+      if (!this.running) return;
+
+      // Frame limiter: decorative work should not compete with the trailer.
+      if (this.lastFrame && time - this.lastFrame < FRAME_MS) {
+        this.rafId = requestAnimationFrame((t) => this.animate(t));
+        return;
+      }
+      this.lastFrame = time;
+
+      const ctx = this.ctx;
+      ctx.clearRect(0, 0, this.width, this.height);
+
+      this.drawPulses(ctx);
+      this.drawParticles(ctx);
+      this.drawTokens(ctx);
+
+      this.rafId = requestAnimationFrame((t) => this.animate(t));
+    }
+
+    drawPulses(ctx) {
+      for (let i = this.pulses.length - 1; i >= 0; i -= 1) {
+        const pulse = this.pulses[i];
+        pulse.radius += pulse.speed;
+        pulse.alpha *= 0.94;
+
+        ctx.beginPath();
+        ctx.arc(pulse.x, pulse.y, pulse.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(34, 227, 242, ${pulse.alpha.toFixed(3)})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        if (pulse.alpha < 0.01 || pulse.radius >= pulse.maxRadius) {
+          this.pulses.splice(i, 1);
         }
       }
     }
 
-    // 3. Draw Floating Python Code Tokens
-    this.ctx.font = '12px "JetBrains Mono", monospace';
-    for (let t of this.tokenParticles) {
-      t.x += t.vx;
-      t.y += t.vy;
+    drawParticles(ctx) {
+      const limit = 110;
 
-      if (t.x < -100) t.x = this.width + 50;
-      if (t.x > this.width + 100) t.x = -50;
-      if (t.y < -50) t.y = this.height + 30;
-      if (t.y > this.height + 50) t.y = -30;
+      for (let i = 0; i < this.particles.length; i += 1) {
+        const particle = this.particles[i];
 
-      this.ctx.font = `${t.fontSize}px "JetBrains Mono", monospace`;
-      this.ctx.fillStyle = `rgba(0, 242, 254, ${t.alpha})`;
-      this.ctx.fillText(t.text, t.x, t.y);
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+
+        if (particle.x < -10) particle.x = this.width + 10;
+        if (particle.x > this.width + 10) particle.x = -10;
+        if (particle.y < -10) particle.y = this.height + 10;
+        if (particle.y > this.height + 10) particle.y = -10;
+
+        const dx = this.mouse.x - particle.x;
+        const dy = this.mouse.y - particle.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0.01 && dist < this.mouse.radius) {
+          const force = (this.mouse.radius - dist) / this.mouse.radius;
+          particle.x -= (dx / dist) * force * 2.5;
+          particle.y -= (dy / dist) * force * 2.5;
+        }
+
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${particle.color}, 0.55)`;
+        ctx.fill();
+
+        for (let j = i + 1; j < this.particles.length; j += 1) {
+          const other = this.particles[j];
+          const cdx = particle.x - other.x;
+          const cdy = particle.y - other.y;
+          const cdist = Math.hypot(cdx, cdy);
+
+          if (cdist < limit) {
+            const alpha = ((1 - cdist / limit) * 0.16).toFixed(3);
+            ctx.beginPath();
+            ctx.moveTo(particle.x, particle.y);
+            ctx.lineTo(other.x, other.y);
+            ctx.strokeStyle = `rgba(34, 227, 242, ${alpha})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      }
     }
 
-    requestAnimationFrame(() => this.animate());
-  }
-}
+    drawTokens(ctx) {
+      for (const token of this.tokenParticles) {
+        token.x += token.vx;
+        token.y += token.vy;
 
-// Instantiate on load
-window.addEventListener('DOMContentLoaded', () => {
-  window.particleCanvas = new ParticleCanvas('bg-canvas');
-});
+        if (token.x < -120) token.x = this.width + 40;
+        if (token.x > this.width + 120) token.x = -40;
+        if (token.y < -40) token.y = this.height + 30;
+        if (token.y > this.height + 40) token.y = -30;
+
+        ctx.font = `${token.fontSize}px "Fira Code", monospace`;
+        ctx.fillStyle = `rgba(34, 227, 242, ${token.alpha})`;
+        ctx.fillText(token.text, token.x, token.y);
+      }
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    window.particleCanvas = new ParticleCanvas('bg-canvas');
+  });
+})();

@@ -1,196 +1,246 @@
 /**
- * TinkerHub Python Study Jam - Audio Engine
- * Plays the official soundtrack: OneRepublic (requested by user: https://youtu.be/hT_nvWreIhg)
- * Features volume control, smooth crossfading, and punchy UI sound effects.
+ * TinkerHub CE Karunagappally — "Syntax to Solutions"
+ * Audio engine: soundtrack playback (lazy-loaded) + lightweight UI cues.
+ *
+ * Design rules:
+ *  - The 4.5 MB soundtrack is not downloaded until someone actually asks for it.
+ *  - Playback state is always reported truthfully (playing / paused / blocked /
+ *    unavailable) so the toolbar never lies about what the browser is doing.
+ *  - Autoplay is only attempted from a user gesture; rejections are handled.
  */
 
-class SoundEngine {
-  constructor() {
-    this.ctx = null;
-    this.audioEl = null;
-    this.masterGain = null;
-    this.isPlaying = false;
-    this.isMuted = false;
-    this.currentTrackTitle = 'OneRepublic — Counting Stars (YouTube)';
-    this.audioSrc = 'assets/soundtrack.mp3';
+(function () {
+  'use strict';
 
-    this.initAudioElement();
-  }
+  class SoundEngine {
+    constructor() {
+      this.audioEl = new Audio();
+      this.audioEl.preload = 'none';
+      this.audioEl.loop = true;
+      this.audioEl.volume = 0.55;
+      this.audioEl.src = 'assets/soundtrack.mp3';
 
-  initAudioElement() {
-    if (this.audioEl) return;
-    this.audioEl = new Audio();
-    this.audioEl.src = this.audioSrc;
-    this.audioEl.preload = 'auto';
-    this.audioEl.loop = true;
-    this.audioEl.volume = 0.65;
-  }
+      this.ctx = null;
+      this.masterGain = null;
 
-  initWebAudio() {
-    if (this.ctx) return;
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
+      this.muted = false;
+      this.available = true;
+      this.wantsMusic = false;
+      this.status = 'idle'; // idle | loading | playing | paused | blocked | unavailable
+      this.onStateChange = null;
 
-    this.ctx = new AudioCtx();
-    this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(0.7, this.ctx.currentTime);
-    this.masterGain.connect(this.ctx.destination);
-  }
-
-  async resume() {
-    this.initWebAudio();
-    if (this.ctx && this.ctx.state === 'suspended') {
-      await this.ctx.resume().catch(() => {});
+      this.audioEl.addEventListener('playing', () => {
+        this.setStatus('playing');
+      });
+      this.audioEl.addEventListener('pause', () => {
+        if (this.status === 'playing') this.setStatus('paused');
+      });
+      this.audioEl.addEventListener('error', () => {
+        // Missing or undecodable file: be honest, don't fake a playing state.
+        this.available = false;
+        this.wantsMusic = false;
+        this.setStatus('unavailable');
+        console.warn('Soundtrack unavailable:', this.audioEl.error);
+      });
     }
-  }
 
-  toggleMute() {
-    this.isMuted = !this.isMuted;
-    if (this.audioEl) {
-      this.audioEl.muted = this.isMuted;
-    }
-    if (this.masterGain && this.ctx) {
-      const targetGain = this.isMuted ? 0 : 0.7;
-      this.masterGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.05);
-    }
-    return !this.isMuted;
-  }
-
-  startMusic() {
-    this.resume();
-    if (this.isMuted) return;
-
-    this.initAudioElement();
-    if (this.audioEl) {
-      this.audioEl.currentTime = 0;
-      this.audioEl.volume = 0.65;
-      const playPromise = this.audioEl.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          this.isPlaying = true;
-        }).catch(err => {
-          console.warn('Audio autoplay blocked by browser, waiting for user click:', err);
+    setStatus(status) {
+      if (this.status === status) return;
+      this.status = status;
+      if (typeof this.onStateChange === 'function') {
+        this.onStateChange({
+          status: this.status,
+          muted: this.muted,
+          available: this.available
         });
       }
     }
-  }
 
-  stopMusic() {
-    if (this.audioEl) {
-      // Smooth fade out
-      let vol = this.audioEl.volume;
-      const fadeInterval = setInterval(() => {
-        if (vol > 0.08) {
-          vol -= 0.08;
-          this.audioEl.volume = vol;
-        } else {
-          clearInterval(fadeInterval);
-          this.audioEl.pause();
-          this.audioEl.currentTime = 0;
-          this.audioEl.volume = 0.65;
-          this.isPlaying = false;
-        }
-      }, 40);
+    /** Lazily create the Web Audio graph (only after a user gesture). */
+    initWebAudio() {
+      if (this.ctx) return;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      this.ctx = new AudioCtx();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.value = 0.5;
+      this.masterGain.connect(this.ctx.destination);
     }
-  }
 
-  // --- UI SOUND EFFECTS (Crisp Web Audio Synthesizer) ---
-  playWhoosh() {
-    if (this.isMuted) return;
-    this.resume();
-    if (!this.ctx) return;
+    async resumeContext() {
+      this.initWebAudio();
+      if (this.ctx && this.ctx.state === 'suspended') {
+        try {
+          await this.ctx.resume();
+        } catch (err) {
+          /* ignore — cues simply stay silent */
+        }
+      }
+    }
 
-    const t = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    /**
+     * Start (or resume) the soundtrack.
+     * @param {{restart?: boolean}} options
+     * @returns {Promise<boolean>} whether audio is actually running
+     */
+    async playMusic(options) {
+      const restart = Boolean(options && options.restart);
+      this.wantsMusic = true;
 
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(440, t);
-    osc.frequency.exponentialRampToValueAtTime(110, t + 0.25);
+      if (!this.available) {
+        this.setStatus('unavailable');
+        return false;
+      }
 
-    gain.gain.setValueAtTime(0.2, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      if (this.muted) {
+        this.wantsMusic = false;
+        return false;
+      }
 
-    osc.connect(gain);
-    gain.connect(this.masterGain || this.ctx.destination);
+      this.audioEl.muted = this.muted;
 
-    osc.start(t);
-    osc.stop(t + 0.25);
-  }
+      if (restart) {
+        try {
+          this.audioEl.currentTime = 0;
+        } catch (err) {
+          /* not seekable yet — play() will start at 0 anyway */
+        }
+      }
 
-  playGlitch() {
-    if (this.isMuted) return;
-    this.resume();
-    if (!this.ctx) return;
+      if (!this.audioEl.paused && !restart) {
+        this.setStatus('playing');
+        return true;
+      }
 
-    const t = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+      try {
+        this.setStatus('loading');
+        await this.audioEl.play();
+        this.setStatus('playing');
+        return true;
+      } catch (err) {
+        // Typically NotAllowedError (autoplay policy) or NotSupportedError.
+        this.setStatus(this.available ? 'blocked' : 'unavailable');
+        console.warn('Soundtrack could not start:', err && err.name ? err.name : err);
+        return false;
+      }
+    }
 
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(180, t);
-    osc.frequency.setValueAtTime(80, t + 0.05);
-    osc.frequency.setValueAtTime(320, t + 0.1);
+    pauseMusic() {
+      if (!this.audioEl.paused) {
+        this.audioEl.pause();
+      }
+      if (this.status === 'playing') this.setStatus('paused');
+    }
 
-    gain.gain.setValueAtTime(0.25, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    /** Resume only when the user has asked for sound. */
+    resumeMusic() {
+      if (!this.wantsMusic || this.muted || !this.available) return Promise.resolve(false);
+      return this.playMusic();
+    }
 
-    osc.connect(gain);
-    gain.connect(this.masterGain || this.ctx.destination);
+    setMuted(muted) {
+      this.muted = Boolean(muted);
+      this.audioEl.muted = this.muted;
+      if (this.masterGain && this.ctx) {
+        this.masterGain.gain.setTargetAtTime(
+          this.muted ? 0 : 0.5,
+          this.ctx.currentTime,
+          0.05
+        );
+      }
+      if (typeof this.onStateChange === 'function') {
+        this.onStateChange({
+          status: this.status,
+          muted: this.muted,
+          available: this.available
+        });
+      }
+      return this.muted;
+    }
 
-    osc.start(t);
-    osc.stop(t + 0.22);
-  }
+    toggleMute() {
+      return this.setMuted(!this.muted);
+    }
 
-  playFanfare() {
-    if (this.isMuted) return;
-    this.resume();
-    if (!this.ctx) return;
+    // --- UI cues -------------------------------------------------------
+    playWhoosh() {
+      this.synth({
+        type: 'sine',
+        from: 420,
+        to: 120,
+        gain: 0.08,
+        duration: 0.22
+      });
+    }
 
-    const notes = [392, 523.25, 659.25, 783.99]; // G4, C5, E5, G5
-    const t = this.ctx.currentTime;
+    playGlitch() {
+      this.synth({
+        type: 'sawtooth',
+        from: 170,
+        to: 80,
+        gain: 0.09,
+        duration: 0.2,
+        steps: [170, 80, 300]
+      });
+    }
 
-    notes.forEach((freq, idx) => {
+    playFanfare() {
+      if (this.muted) return;
+      this.resumeContext();
+      if (!this.ctx) return;
+      const notes = [392, 523.25, 659.25, 783.99];
+      notes.forEach((freq, index) => {
+        this.synth({
+          type: 'triangle',
+          from: freq,
+          to: freq,
+          gain: 0.06,
+          duration: 0.42,
+          delay: index * 0.08
+        });
+      });
+    }
+
+    playKeyClick() {
+      this.synth({
+        type: 'square',
+        from: 1150 + Math.random() * 300,
+        to: 900,
+        gain: 0.012,
+        duration: 0.03
+      });
+    }
+
+    synth(options) {
+      if (this.muted || !this.available) return;
+      this.resumeContext();
+      if (!this.ctx || !this.masterGain) return;
+
+      const t = this.ctx.currentTime + (options.delay || 0);
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
 
-      osc.type = 'triangle';
-      osc.frequency.value = freq;
+      osc.type = options.type || 'sine';
+      if (Array.isArray(options.steps)) {
+        options.steps.forEach((freq, i) => {
+          osc.frequency.setValueAtTime(freq, t + i * 0.05);
+        });
+      } else {
+        osc.frequency.setValueAtTime(options.from, t);
+        if (options.to !== options.from) {
+          osc.frequency.exponentialRampToValueAtTime(options.to, t + options.duration);
+        }
+      }
 
-      const startTime = t + (idx * 0.08);
-      gain.gain.setValueAtTime(0.18, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.45);
+      gain.gain.setValueAtTime(options.gain, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + options.duration);
 
       osc.connect(gain);
-      gain.connect(this.masterGain || this.ctx.destination);
-
-      osc.start(startTime);
-      osc.stop(startTime + 0.45);
-    });
+      gain.connect(this.masterGain);
+      osc.start(t);
+      osc.stop(t + options.duration + 0.02);
+    }
   }
 
-  playKeyClick() {
-    if (this.isMuted) return;
-    this.resume();
-    if (!this.ctx) return;
-
-    const t = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(1200 + Math.random() * 300, t);
-
-    gain.gain.setValueAtTime(0.03, t);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
-
-    osc.connect(gain);
-    gain.connect(this.masterGain || this.ctx.destination);
-
-    osc.start(t);
-    osc.stop(t + 0.03);
-  }
-}
-
-// Global instance
-window.soundEngine = new SoundEngine();
+  window.soundEngine = new SoundEngine();
+})();
